@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Load TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"> </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
+	<title>
+		Tensor Flow JS - Tutorial Project
+	</title>
+</head>
+<body>
+	x: <input type="number" id="x" />
+	y: <input type="number" id="y" />
+	<input type="button" id="append" value="submit"/>
+
+	<div style="padding: 50px">
+		<canvas id="myChart" width="600" height="300"></canvas>
+	</div>
+
+	<script>
+		var xs = []
+		var ys = []
+		document.getElementById("x").value = 1
+
+
+		//Create the model
+        const model = tf.sequential();
+        model.add(tf.layers.leakyReLU({units: 128, inputShape: [1]})); // layer 1
+        model.add(tf.layers.leakyReLU({units: 128, inputShape: [128]})); // layer 2
+        model.add(tf.layers.dense({units: 1, inputShape: [128]})); // output layer
+        model.compile({loss: 'meanSquaredError', optimizer: 'adam'}); // compile with params
+
+		document.getElementById("append").onclick = function(){
+			var x = document.getElementById("x").value;
+			var y = document.getElementById("y").value;
+			xs.push(x);
+			ys.push(y);
+
+			document.getElementById("x").value = parseInt(x) + 1;
+
+			model.fit(tf.tensor(xs), tf.tensor(ys), {epochs : 150}).then(() => {
+
+				bestfit = model.predict(tf.tensor2d(xs, [xs.length, 1])).dataSync();
+
+				var ctx = document.getElementById("myChart").getContext('2d'); // begin chart
+
+				// Chart data and settings:
+	            var myChart = new Chart(ctx, {
+	                type: 'line',
+	                options: {scales:{yAxes: [{ticks: {beginAtZero: true}}]}},
+	                data: {
+	                    labels: xs,
+	                    datasets: [
+	                    {
+	                        label: 'Original Data',
+	                        data: ys,
+	                        borderWidth: 1,
+	                    },{
+	                        label: 'Bestfit',
+	                        data: bestfit,
+	                        borderWidth: 1,
+	                        borderColor: "#FF0000",
+	                        backgroundColor: "rgba(1,1,1,0)",
+	                    },]
+	                },
+	            });
+            });
+		}
+
+
+
+	</script>
+</body>
+</html>
